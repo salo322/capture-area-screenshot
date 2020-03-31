@@ -1,4 +1,19 @@
 
+chrome.storage.sync.get((config) => {
+  if (!config.method) {
+    chrome.storage.sync.set({method: 'crop'})
+  }
+  if (!config.format) {
+    chrome.storage.sync.set({format: 'png'})
+  }
+  if (!config.save) {
+    chrome.storage.sync.set({save: 'file'})
+  }
+  if (config.dpr === undefined) {
+    chrome.storage.sync.set({dpr: true})
+  }
+})
+
 function inject (tab) {
   chrome.tabs.sendMessage(tab.id, {message: 'init'}, (res) => {
     if (res) {
@@ -39,6 +54,7 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
       chrome.tabs.getSelected(null, (tab) => {
 
         chrome.tabs.captureVisibleTab(tab.windowId, {format: config.format}, (image) => {
+       
 
           if (config.method === 'view') {
             if (req.dpr !== 1 && !config.dpr) {
@@ -58,6 +74,29 @@ chrome.runtime.onMessage.addListener((req, sender, res) => {
         })
       })
     })
+  }
+  else if (req.message === 'active') {
+    if (req.active) {
+      chrome.storage.sync.get((config) => {
+        if (config.method === 'view') {
+          chrome.browserAction.setTitle({tabId: sender.tab.id, title: 'Capture Viewport'})
+          chrome.browserAction.setBadgeText({tabId: sender.tab.id, text: '⬒'})
+        }
+    
+        else if (config.method === 'crop') {
+          chrome.browserAction.setTitle({tabId: sender.tab.id, title: 'Crop and Save'})
+          chrome.browserAction.setBadgeText({tabId: sender.tab.id, text: '◩'})
+        }
+        else if (config.method === 'wait') {
+          chrome.browserAction.setTitle({tabId: sender.tab.id, title: 'Crop and Wait'})
+          chrome.browserAction.setBadgeText({tabId: sender.tab.id, text: '◪'})
+        }
+      })
+    }
+    else {
+      chrome.browserAction.setTitle({tabId: sender.tab.id, title: 'Screenshot Capture'})
+      chrome.browserAction.setBadgeText({tabId: sender.tab.id, text: ''})
+    }
   }
   return true
 })

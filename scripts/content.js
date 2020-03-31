@@ -93,8 +93,25 @@ var save = (image, format, save) => {
     link.href = image
     link.click()
   }
- 
+  else if (save === 'clipboard') {
+    navigator.clipboard.writeText(image).then(() => {
+      alert([
+        'Screenshot Capture:',
+        `${image.substring(0, 40)}...`,
+        'Saved to Clipboard!'
+      ].join('\n'))
+    })
+  }
 }
+
+window.addEventListener('resize', ((timeout) => () => {
+  clearTimeout(timeout)
+  timeout = setTimeout(() => {
+    jcrop.destroy()
+    init(() => overlay(null))
+  }, 100)
+})())
+
 chrome.runtime.onMessage.addListener((req, sender, res) => {
   if (req.message === 'init') {
     res({}) 
